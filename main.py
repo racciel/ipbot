@@ -1,6 +1,5 @@
 import requests
 import asyncio
-import time
 import os
 import discord
 from discord.ext import tasks
@@ -9,13 +8,15 @@ from dotenv import load_dotenv
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
-client = discord.Client()
+intents = discord.Intents.default()
+intents.messages = True
 
-prviput = True
+client = discord.Client(intents=intents)
+
 ipstari = requests.get('https://ipinfo.io/ip').text
 
 @tasks.loop(minutes=1)
-async def test():
+async def check_ip():
     global ipstari
     channel = client.get_channel(865124359181172736)
     ip = requests.get('https://ipinfo.io/ip').text
@@ -28,9 +29,10 @@ async def test():
 
 @client.event
 async def on_ready():
-    global prviput
-    prviput = True
-    test.start()
+    channel = client.get_channel(865124359181172736)
+    ip = requests.get('https://ipinfo.io/ip').text
+    await channel.send('Pokrećem se! Trenutna IP adresa servera je: ' + ip)
+    check_ip.start()
 
 @client.event
 async def on_resumed():
@@ -43,3 +45,4 @@ async def on_message(message):
         await message.channel.send('NA! ' + response)
     
 client.run(TOKEN)
+
